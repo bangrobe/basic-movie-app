@@ -13,17 +13,17 @@ export default {
 	components: { Movie },
 	data() {
 		return {
-		// 	movies: []
+			// movies: []
 		}
 	},
 	computed: {
 		movies() {
 			return this.$store.getters.getMovies;
 		}
+},
+	created() {
+		this.$store.dispatch('fetchMovies');
 	}
-	// created() {
-	// 	this.movies = this.$store.getters.getMovies;
-	// }
 }
 </script>
 

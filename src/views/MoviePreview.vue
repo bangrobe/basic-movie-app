@@ -27,36 +27,96 @@
 				</h3>
 			
 			<div id="options">
-				<button class="edit">Edit</button>
-				<button class="delete">Delete</button>
+				<button class="edit" @click="showModal=true">Edit</button>
+				<button class="delete" @click="deleteMovie">Delete</button>
 			</div>
 		</div>
 		</div>
+	<!--Update Movie Modal-->
+	<modal v-if="showModal" @close="showModal = !showModal">
+			<template v-slot:header>
+				<h3 class="m-0">Edit movie</h3>
+			</template>
+			<template v-slot:body>
+				<form @submit.prevent="updateMovie" ref="movieForm" id="movie-form">
+					<p>Fill out the details below</p>
+					<input required v-model="movie.name" type="text" placeholder="Name" />
+					<input required v-model="movie.year" type="number" placeholder="Year"/>
+					<input required v-model="movie.rating" type="number" placeholder="Rating"/>
+					<input required v-model="movie.genre" type="text" placeholder="Genre"/>
+					<input required v-model="movie.budget" type="text" placeholder="Budget" />
+					<input required v-model="movie.boxOffice" type="text" placeholder="Box Office"/>
+					<input required v-model="movie.poster" type="text" placeholder="Poster" />
+					<hr />
+					<div>
+						<div id="actor-input">
+							<p class="m-0">Actors</p>
+							<span @click="addActor" class="add-actor">+</span>
+						</div>
+						<input required v-for="(actor,index) in movie.actors" :key="index"
+									v-model="movie.actors[index].name"
+									type="text"
+									placeholder="Actor"
+							/>
+					</div>
+					<hr/>
+					<textarea required v-model="movie.storyline" placeholder="Storyline" rows="6"/>
+				</form>
+			</template>
+			<template v-slot:footer>
+				
+				<button id="add-movie" @click="$refs.movieForm.requestSubmit()">Submit</button>
+			</template>
+		</modal>
 	</div>
 </template>
 
 <script>
 import NavBar from '../components/NavBar.vue';
 import ratingMixin from '../mixins/getRatingColor';
+import Modal from '../components/Modal';
+import moviesApi from '@/services/moviesApi';
 
 export default {
 	mixins: [ratingMixin],
-	components: { NavBar },
+	components: { NavBar, Modal },
 	props: {
 		id: {
-			type: Number,
+			type: [String,Number],
 			default: null
 		}
 	},
 	data() {
 		return {
-			movie: {}
+			showModal: false,
+			movie: {},
 		}
+	},
+	methods: {
+		updateMovie() {
+			this.$store.dispatch('updateMovie',this.movie);
+			this.showModal = false;
+		},
+		deleteMovie() {
+				this.$store
+					.dispatch("deleteMovie", this.id)
+					.then(() => this.$router.push("/"));
+		},
+		addActor() {
+			this.form.actors.push({name: ""})
+		},
 	},
 	created() {
 		//Call movie from store
 		//Tai sao phai parseInt:  Vi getters tra ve ID la 1 string
-		this.movie = this.$store.getters.getMovieById(parseInt(this.id));
+		const movie = this.$store.getters.getMovieById(parseInt(this.id));
+		if(movie) {
+			this.movie = movie;
+		} else {
+			moviesApi.getMovieById(this.id)
+			.then(res=> this.movie = res)
+			.catch(err => console.log(err))
+		}
 	}
 }
 </script>
